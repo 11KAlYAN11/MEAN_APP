@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, requireAuth } from "./auth";
-import { storage } from "./storage";
+import { storage } from "./storage.mongo"; // Updated to use MongoDB storage
 import { insertTodoSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -14,7 +14,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all todos for the current user
   app.get("/api/todos", requireAuth, async (req, res, next) => {
     try {
-      const todos = await storage.getTodosByUserId(req.user!.id);
+      const todos = await storage.getTodosByUserId(req.user!.id.toString());
       res.json(todos);
     } catch (err) {
       next(err);
@@ -24,11 +24,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get a specific todo by ID
   app.get("/api/todos/:id", requireAuth, async (req, res, next) => {
     try {
-      const todoId = parseInt(req.params.id);
-      if (isNaN(todoId)) {
-        return res.status(400).json({ message: "Invalid todo ID" });
-      }
-
+      const todoId = req.params.id;
+      
       const todo = await storage.getTodoById(todoId);
       
       if (!todo) {
@@ -36,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Ensure the todo belongs to the current user
-      if (todo.userId !== req.user!.id) {
+      if (todo.userId.toString() !== req.user!.id.toString()) {
         return res.status(403).json({ message: "Unauthorized" });
       }
       
@@ -58,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add the current user's ID
       const todo = await storage.createTodo({
         ...result.data,
-        userId: req.user!.id,
+        userId: req.user!.id.toString(),
       });
       
       res.status(201).json(todo);
@@ -70,10 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a todo
   app.put("/api/todos/:id", requireAuth, async (req, res, next) => {
     try {
-      const todoId = parseInt(req.params.id);
-      if (isNaN(todoId)) {
-        return res.status(400).json({ message: "Invalid todo ID" });
-      }
+      const todoId = req.params.id;
 
       // Validate the request body
       const result = insertTodoSchema.safeParse(req.body);
@@ -87,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Todo not found" });
       }
       
-      if (existingTodo.userId !== req.user!.id) {
+      if (existingTodo.userId.toString() !== req.user!.id.toString()) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -102,10 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a todo's completion status
   app.patch("/api/todos/:id", requireAuth, async (req, res, next) => {
     try {
-      const todoId = parseInt(req.params.id);
-      if (isNaN(todoId)) {
-        return res.status(400).json({ message: "Invalid todo ID" });
-      }
+      const todoId = req.params.id;
 
       // Validate the completed field
       const schema = z.object({
@@ -126,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Todo not found" });
       }
       
-      if (existingTodo.userId !== req.user!.id) {
+      if (existingTodo.userId.toString() !== req.user!.id.toString()) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -141,10 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete a todo
   app.delete("/api/todos/:id", requireAuth, async (req, res, next) => {
     try {
-      const todoId = parseInt(req.params.id);
-      if (isNaN(todoId)) {
-        return res.status(400).json({ message: "Invalid todo ID" });
-      }
+      const todoId = req.params.id;
 
       // Check if the todo exists and belongs to the user
       const existingTodo = await storage.getTodoById(todoId);
@@ -152,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Todo not found" });
       }
       
-      if (existingTodo.userId !== req.user!.id) {
+      if (existingTodo.userId.toString() !== req.user!.id.toString()) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 

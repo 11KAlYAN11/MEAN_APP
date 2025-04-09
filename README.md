@@ -4,7 +4,7 @@
 
 - Node.js (v18 or later)
 - npm (v8 or later)
-- PostgreSQL (v14 or later)
+- MongoDB (Cloud or local installation)
 
 ## Setup Steps
 
@@ -19,27 +19,13 @@ npm install
 Create a `.env` file in the root directory:
 
 ```
-DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database>
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<database>
 SESSION_SECRET=your_session_secret_key
 ```
 
-Replace the placeholders with your PostgreSQL credentials.
+Replace the MongoDB URI with your connection string. You can use MongoDB Atlas or a local MongoDB instance.
 
-### 3. Initialize Database
-
-Create a PostgreSQL database:
-
-```bash
-psql -c "CREATE DATABASE taskmaster;"
-```
-
-Push the schema to the database:
-
-```bash
-npm run db:push
-```
-
-### 4. Create Admin User
+### 3. Create Admin User
 
 Run this command to create an admin user:
 
@@ -51,7 +37,7 @@ This creates a user with:
 - Username: `admin`
 - Password: `admin`
 
-### 5. Run the Application
+### 4. Run the Application
 
 Start the application:
 

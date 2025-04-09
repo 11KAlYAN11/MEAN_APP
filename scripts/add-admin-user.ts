@@ -1,4 +1,4 @@
-import { storage } from "../server/storage";
+import { connectToMongoDB, User } from "../server/mongodb";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -12,26 +12,31 @@ async function hashPassword(password: string) {
 
 async function createAdminUser() {
   try {
+    // Connect to MongoDB
+    await connectToMongoDB();
+    
     // Check if admin user already exists
-    const existingUser = await storage.getUserByUsername("admin");
+    const existingUser = await User.findOne({ username: "admin" });
     
     if (existingUser) {
       console.log("Admin user already exists!");
-      return;
+      process.exit(0);
     }
     
     // Create admin user
     const hashedPassword = await hashPassword("admin");
-    const adminUser = await storage.createUser({
+    const adminUser = new User({
       username: "admin",
       password: hashedPassword,
     });
     
+    await adminUser.save();
+    
     console.log("Admin user created successfully:", adminUser);
+    process.exit(0);
   } catch (error) {
     console.error("Error creating admin user:", error);
-  } finally {
-    process.exit(0);
+    process.exit(1);
   }
 }
 
