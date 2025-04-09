@@ -15,7 +15,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// Traditional Postgres type
+// export type User = typeof users.$inferSelect;
+
+// MongoDB compatible type with _id
+export type User = {
+  _id?: string; // MongoDB ObjectId as string
+  id?: number; // Keep for compatibility
+  username: string;
+  password: string;
+};
 
 // Todo schema
 export const todos = pgTable("todos", {
@@ -38,4 +47,16 @@ export const insertTodoSchema = createInsertSchema(todos)
   });
 
 export type InsertTodo = z.infer<typeof insertTodoSchema>;
-export type Todo = typeof todos.$inferSelect;
+// Traditional Postgres type
+// export type Todo = typeof todos.$inferSelect;
+
+// MongoDB compatible type with _id
+export type Todo = {
+  _id?: string; // MongoDB ObjectId as string
+  id?: number; // Keep for compatibility
+  title: string;
+  description?: string;
+  priority: "low" | "medium" | "high";
+  completed: boolean;
+  userId: string;
+};
