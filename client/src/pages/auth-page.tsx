@@ -16,7 +16,8 @@ const loginSchema = z.object({
 });
 
 const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -51,6 +52,7 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange", // Validate fields as the user types
   });
 
   const onLoginSubmit = (values: LoginFormValues) => {
@@ -64,6 +66,8 @@ export default function AuthPage() {
     const { confirmPassword, ...userData } = values;
     registerMutation.mutate(userData);
   };
+  
+  // Remove console.log for production
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -171,9 +175,14 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Confirm your password" {...field} />
+                          <Input 
+                            type="password" 
+                            placeholder="Confirm your password" 
+                            className={registerForm.formState.errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="font-medium text-red-600" />
                       </FormItem>
                     )}
                   />
